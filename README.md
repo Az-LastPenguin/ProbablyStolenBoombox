@@ -26,6 +26,6 @@ The values that you can set are as follows:
 
 This mod also has a feature to make cassettes take up less space (1x1 instead of 2x2). It's turned on by default and you can disable it in UserData/MelonPreferences.cfg. (I didn't test much but it seems to work correctly, but still beware of possible bugs. If you fear that you can get your save file bricked even if the chance is really low, turn this off!)
 
-**New game is NOT REQUIRED**, but cassettes that were created before installing this game will not be turned into 1x1 if that setting is on.
+**New game is NOT REQUIRED**, but cassettes that were created before installing this game will not be turned into 1x1 if that setting is on and will be a bit funky.
 
 It is **NOT RECOMMENDED** to remove a cassette from the Boombox folder if you have it in your save, this might brick your save!

@@ -10,6 +10,7 @@ using UnityEngine.Networking;
 
 [assembly: MelonInfo(typeof(ProbablyStolenBoombox.Core), "ProbablyStolenBoombox", "1.0.0", "LastPenguin", null)]
 [assembly: MelonGame("Questing Goose Studio", "Probably Stolen")]
+[assembly: HarmonyDontPatchAll]
 
 namespace ProbablyStolenBoombox
 {
@@ -26,6 +27,7 @@ namespace ProbablyStolenBoombox
 
         private MelonPreferences_Category boomboxCategory;
         private MelonPreferences_Entry<float> cassettePoolWeight;
+        private MelonPreferences_Entry<bool> smallCassettes;
 
         public override void OnLateInitializeMelon()
         {
@@ -34,10 +36,23 @@ namespace ProbablyStolenBoombox
                 Directory.CreateDirectory(AudioFolderPath);
 
             boomboxCategory = MelonPreferences.CreateCategory("Boombox");
-
             cassettePoolWeight = boomboxCategory.CreateEntry<float>("Cassette Pool Weight", 0.01f);
-
+            smallCassettes = boomboxCategory.CreateEntry<bool>("Make Cassetes Small", true);
             MelonPreferences.Save();
+
+            // Make sprites small if needed & patch cassette creation to make them small
+            if (smallCassettes.Value)
+            {
+                for (int i = 1; i < 11; i++)
+                {
+                    string cassetteId = $"cassette{i}";
+                    Sprite oldSprite = RenderHandler.LoadFromAtlas("Items/items_amenities", cassetteId);
+                    Sprite newSprite = Sprite.Create(oldSprite.texture, oldSprite.rect, oldSprite.pivot, 200);
+                    RenderHandler.atlasCache["Items/items_amenities"][cassetteId] = newSprite;
+                }
+
+                HarmonyInstance.PatchAll(typeof(Patches));
+            }
 
             LoggerInstance.Msg("Probably Stolen Boombox Initialized.");
         }
@@ -56,7 +71,6 @@ namespace ProbablyStolenBoombox
                 yield return null;
 
             LoggerInstance.Msg("Creating Cassettes.");
-
 
             // Create new loot table for dumping grounds
             // 1. Create new ProbabilityItem<LootTable>

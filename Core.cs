@@ -19,17 +19,27 @@ namespace ProbablyStolenBoombox
     {
         private string AudioFolderPath = Path.Combine(MelonEnvironment.ModsDirectory, "Boombox");
 
-        private ProbabilityList<string> CassetPL;
+        private ProbabilityList<string> CassettePL;
 
         private ProbabilityItem<string> PITemplate;
 
+
+        private MelonPreferences_Category boomboxCategory;
+        private MelonPreferences_Entry<float> cassettePoolWeight;
+
         public override void OnLateInitializeMelon()
         {
-            LoggerInstance.Msg("Initialized.");
-
             // If there is no Boombox folder, create one
             if (!Directory.Exists(AudioFolderPath))
                 Directory.CreateDirectory(AudioFolderPath);
+
+            boomboxCategory = MelonPreferences.CreateCategory("Boombox");
+
+            cassettePoolWeight = boomboxCategory.CreateEntry<float>("Cassette Pool Weight", 0.01f);
+
+            MelonPreferences.Save();
+
+            LoggerInstance.Msg("Probably Stolen Boombox Initialized.");
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -45,25 +55,29 @@ namespace ProbablyStolenBoombox
             if (AudioDirectory.activeDirectory == null)
                 yield return null;
 
+            LoggerInstance.Msg("Creating Cassettes.");
+
+
             // Create new loot table for dumping grounds
             // 1. Create new ProbabilityItem<LootTable>
             TableGroup dumpingTG = TableGroupMaster.tableGroups["dumpingGroundTG"];
-            ProbabilityItem<LootTable> cassettePI = dumpingTG.tableGroup.m_ProbabilityItems.System_Collections_IList_get_Item(0).MemberwiseClone().Cast<ProbabilityItem<LootTable>>();
+            // I couldn't for the love of god figure out why i can't create ProbabilityItem without cloning. If i don't clone, it instead becomes the type T and sometimes even crashes
+            ProbabilityItem<LootTable> cassettePI = dumpingTG.tableGroup.m_ProbabilityItems[0].MemberwiseClone().Cast<ProbabilityItem<LootTable>>();
             cassettePI.m_DepletableItem = false;
-            cassettePI.m_BaseProbability = 0.01f;
+            cassettePI.m_BaseProbability = cassettePoolWeight.Value;
 
             // 2. Create the Loot Table
-            LootTable cassetteLT = cassettePI.m_Value.MemberwiseClone().Cast<LootTable>();
+            LootTable cassetteLT = new LootTable();
             cassetteLT.name = "boomboxCassetteTable";
             cassettePI.m_Value = cassetteLT;
 
             // 3. Create the ProbabilityList for the Loot Table
-            CassetPL = cassetteLT.table.MemberwiseClone().Cast<ProbabilityList<string>>();
-            cassetteLT.table = CassetPL;
+            CassettePL = new ProbabilityList<string>();
+            cassetteLT.table = CassettePL;
 
             // 4. Empty the ProbabilityList and make a template for ProbabilityItem<string>
-            PITemplate = CassetPL.m_ProbabilityItems.System_Collections_IList_get_Item(0).MemberwiseClone().Cast<ProbabilityItem<string>>();
-            CassetPL.m_ProbabilityItems.Clear();
+            PITemplate = dumpingTG.tableGroup.m_ProbabilityItems[0].m_Value.table.m_ProbabilityItems[0].MemberwiseClone().Cast<ProbabilityItem<string>>();
+            CassettePL.m_ProbabilityItems.Clear();
 
             // 5. Add the ProbabilityItem<LootTable> to the tablegroup
             dumpingTG.tableGroup.m_ProbabilityItems.Add(cassettePI);
@@ -113,7 +127,7 @@ namespace ProbablyStolenBoombox
             // Add audio to the audio directory
             AudioDirectory.activeDirectory.audioAssetDict[cassetteId] = clip;
 
-            // Add handler for creating this cassette 
+            // 2. Add handler for creating this cassette 
             if (!DirectoryMaster.singletonInstance.TryGetValue(Il2CppType.Of<GameItem>(), out var gameItemDirs))
                 yield break;
 
@@ -128,12 +142,14 @@ namespace ProbablyStolenBoombox
                 return cassette;
             });
 
-            // Add the cassette to the loottable
+            // 3. Add the cassette to the lootTable
             ProbabilityItem<string> probItem = PITemplate.MemberwiseClone().Cast<ProbabilityItem<string>>();
             probItem.m_Value = cassetteId;
             probItem.m_BaseProbability = info.weight;
 
-            CassetPL.m_ProbabilityItems.Add(probItem);
+            CassettePL.m_ProbabilityItems.Add(probItem);
+
+            LoggerInstance.Msg($"Cassette {info.id} was created.");
         }
 
         private AudioType GetAudioType(string path)

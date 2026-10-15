@@ -5,7 +5,8 @@ I opened the game and immediately knew what i had to do, so i closed the game an
 
 It was made in day. I can finally play the game now. 
 
-I'll try to update the mod whenever it breaks, but don't expect me to maintain this forever though.
+~~I'll try to update the mod whenever it breaks, but don't expect me to maintain this forever though.~~
+Playtest is over and the game might change a lot internally, i'm not really interested in keeping this mod working so you can consider this to be a broken proof of concept mod.
 
 ## Demo
 https://github.com/user-attachments/assets/801ab96f-a068-494b-ad2c-86ab2a7c9e63
